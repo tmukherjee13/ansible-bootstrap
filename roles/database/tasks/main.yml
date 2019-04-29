@@ -1,0 +1,9 @@
+---
+- include: check_vars.yml
+  tags: database:check
+  
+- include: debian.yml
+  when: ansible_distribution == "Ubuntu"
+
+- include: centos.yml
+  when: ansible_distribution == "CentOS"

@@ -1,0 +1,73 @@
+---
+# This playbook will install mysql and create db user and give permissions.
+
+- name: Install Mysql package
+  apt:
+   name: "{{ item }}"
+   state: installed
+  # when: create_db
+  with_items:
+    - bundler
+    - mysql-server-core-5.5
+    - mysql-client-core-5.5
+    - libmysqlclient-dev
+    - python-mysqldb
+    - mysql-server
+    - mysql-client
+    - build-essential
+  notify:
+  - start mysql
+
+- name: Remove the MySQL test database
+  action: mysql_db db=test state=absent
+
+
+- name: Create Application Database
+  mysql_db:
+   name: "{{ db_name }}"
+   state: present
+  when: create_db
+
+
+- name: Create Application DB User
+  mysql_user:
+   name: "{{db_user}}"
+   password: "{{db_pass}}"
+   host: "%"
+   priv: "{{db_name}}.*:ALL"
+   state: present
+  when: create_db_user
+
+
+- name: Update mysql root password for all root accounts
+  mysql_user:
+    name: root
+    password: "{{root_db_pass}}"
+    host: "{{item}}"
+    priv: "*.*:ALL,GRANT"
+    state: present
+  with_items:
+    - "{{ansible_hostname}}"
+    - 127.0.0.1
+    - ::1
+    - localhost
+
+- name: Create local my.cnf for root user
+  template:
+   src: my.cnf.j2
+   dest: /root/.my.cnf
+   owner: root
+   mode: 0600
+
+
+# - name: Configure SELinux to start mysql on any port
+#   seboolean: name=mysql_connect_any state=true persistent=yes
+#   when: sestatus.rc != 0
+
+# - name: insert iptables rule
+#   lineinfile: dest=/etc/sysconfig/iptables state=present regexp="{{ mysql_port }}"
+#               insertafter="^:OUTPUT " line="-A INPUT -p tcp  --dport {{ mysql_port }} -j  ACCEPT"
+#   notify: restart iptables
+
+
+

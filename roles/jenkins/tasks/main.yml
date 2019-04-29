@@ -1,0 +1,34 @@
+---
+- name: Setup Jenkins Repo
+  apt_key:
+    url: "{{ jenkins_key_server }}"
+    state: "{{ package_state }}"
+
+- name: Add Jenkins Repository in sources list
+  apt_repository:
+    repo: "{{ jenkins_repo_url }}"
+    state: "{{ package_state }}"
+
+- name: Java | Install JDK
+  apt:
+    name: openjdk-8-jdk
+    state: "{{ package_state }}"
+
+- name: Jenkins | Install
+  apt:
+    name: jenkins
+    state: "{{ package_state }}"
+    update_cache: yes
+
+- name: Wait for jenkins to start
+  wait_for: timeout=30
+  delegate_to: localhost
+
+- name: Get Jenkins Password
+  shell: cat /var/lib/jenkins/secrets/initialAdminPassword
+  changed_when: false
+  register: result
+
+- name: Print Results
+  debug:
+    var: result.stdout

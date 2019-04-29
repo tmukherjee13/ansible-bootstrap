@@ -1,0 +1,9 @@
+---
+- hosts: localhost
+  # user: vagrant
+  become: yes
+  roles:
+    # - {name: database, tags: mysql}
+    - {name: nginx, tags: nginx}
+    - {name: jenkins, tags: jenkins}
+    - {name: app, tags: app}

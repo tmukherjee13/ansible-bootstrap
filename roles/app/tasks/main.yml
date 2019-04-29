@@ -1,0 +1,44 @@
+---
+- name: Ensure deploy directory is present
+  file:
+    dest: "{{ app_directory }}"
+    state: directory
+    owner: "{{ web_server_user }}"
+    group: "{{ web_server_group }}"
+    mode: 0755
+
+- name: Ensure deploy directory is present
+  stat:
+    path: "{{ app_directory }}/.gitignore"
+  register: app_dir
+
+- name: Clone repository
+  git:
+    dest: "{{ app_directory }}"
+    repo: "{{ app_repo_url }}"
+    update: no
+    accept_hostkey: True
+  become: yes
+  become_user: "{{ web_server_user }}"
+  when: app_dir.stat.exists == False 
+  register: cloned
+
+- name: Update repository
+  git:
+    dest: "{{ app_directory }}"
+    repo: "{{ app_repo_url }}"
+    update: yes
+    force: yes
+    accept_hostkey: True
+  become: yes
+  become_user: jenkins
+  when: app_dir.stat.exists
+
+- name: Ensure proper permissions are present
+  file:
+    dest: "{{ app_directory }}/automation"
+    owner: jenkins
+    group: www-data
+    mode: u=rwX,g=rX,o=rX
+    recurse: yes
+

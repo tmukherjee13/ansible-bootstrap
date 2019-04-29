@@ -1,0 +1,17 @@
+---
+
+- name: Install Nginx
+  yum:
+    name: nginx
+    state: latest
+    # update_cache: yes
+
+- name: Ensure directory is present
+  file:
+    dest: /var/www/html
+    state: directory
+
+- name: Copy nginx configuration
+  template: src=default.conf dest=/etc/nginx/conf.d/default.conf
+  notify: restart nginx
+
